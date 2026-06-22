@@ -92,10 +92,16 @@ enum AccessibilityBridge {
 
     // MARK: Write geometry
 
-    /// Set a window's frame in the global Quartz top-left space. Order matters:
-    /// some apps clamp size against the *current* position, so we set position,
-    /// then size, then position again to settle. Returns whether the first
-    /// write succeeded.
+    /// Set a window's frame in the global Quartz top-left space.
+    ///
+    /// **Order is the whole game.** If we set position *first* while the window
+    /// is still at its old (larger) size, macOS clamps the move so the big
+    /// window stays on screen, and many apps then silently DROP the following
+    /// size write — the window moves but never resizes. So we set **size first**
+    /// (shrink in place), then position (the now-smaller window lands exactly),
+    /// then size again to defeat apps that re-anchor on resize. Finally we read
+    /// the result back and retry once for stubborn windows (size increments,
+    /// minimum sizes, lazy constraint solvers). Returns whether the write took.
     @discardableResult
     static func setFrame(_ frame: CGRect, of window: AXUIElement) -> Bool {
         var pos = frame.origin
@@ -103,11 +109,25 @@ enum AccessibilityBridge {
         guard let posValue = AXValueCreate(.cgPoint, &pos),
               let sizeValue = AXValueCreate(.cgSize, &size) else { return false }
 
-        let p1 = AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posValue)
-        AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
-        // Second position pass corrects apps that re-anchored on resize.
-        AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posValue)
-        return p1 == .success
+        let apply: () -> Void = {
+            AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+            AXUIElementSetAttributeValue(window, kAXPositionAttribute as CFString, posValue)
+            AXUIElementSetAttributeValue(window, kAXSizeAttribute as CFString, sizeValue)
+        }
+        apply()
+
+        // Verify; if the app honored only part of the request, run the sequence
+        // once more — the second pass almost always settles it.
+        if let got = self.frame(of: window),
+           abs(got.width - frame.width) > 2 || abs(got.height - frame.height) > 2 ||
+           abs(got.minX - frame.minX) > 2 || abs(got.minY - frame.minY) > 2 {
+            apply()
+        }
+
+        if let settled = self.frame(of: window) {
+            return abs(settled.width - frame.width) <= 4 && abs(settled.height - frame.height) <= 4
+        }
+        return true
     }
 
     // MARK: Enumerate (for layout capture / apply)
