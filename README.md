@@ -46,6 +46,7 @@ System-wide hotkeys via a **hand-rolled Carbon `RegisterEventHotKey` wrapper**
 |---|---|
 | Moitié gauche / droite / haut / bas (cycles ½→⅓→⅔) | `⌃⌥←` `⌃⌥→` `⌃⌥↑` `⌃⌥↓` |
 | Tiers gauche / centre / droit | `⌃⌥J` `⌃⌥K` `⌃⌥L` |
+| Deux tiers gauche / droit | `⌃⌥⇧←` `⌃⌥⇧→` |
 | Coins haut-gauche / haut-droit / bas-gauche / bas-droit | `⌃⌥U` `⌃⌥I` `⌃⌥N` `⌃⌥M` |
 | Plein écran (maximize) | `⌃⌥↩` |
 | Presque plein (almost maximize) | `⌃⌥A` |

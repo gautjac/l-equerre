@@ -10,6 +10,7 @@ enum BindableAction: String, CaseIterable, Identifiable {
     case cycleLeft, cycleRight, cycleUp, cycleDown
     case maximize, center, almostMaximize
     case leftThird, centerThird, rightThird
+    case leftTwoThirds, rightTwoThirds
     case topLeft, topRight, bottomLeft, bottomRight
 
     var id: String { rawValue }
@@ -27,6 +28,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .leftThird:      return .leftThird
         case .centerThird:    return .centerThird
         case .rightThird:     return .rightThird
+        case .leftTwoThirds:  return .leftTwoThirds
+        case .rightTwoThirds: return .rightTwoThirds
         case .topLeft:        return .topLeft
         case .topRight:       return .topRight
         case .bottomLeft:     return .bottomLeft
@@ -46,6 +49,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .leftThird:      return t("Tiers gauche",   "Left third")
         case .centerThird:    return t("Tiers centre",   "Center third")
         case .rightThird:     return t("Tiers droit",    "Right third")
+        case .leftTwoThirds:  return t("Deux tiers gauche", "Left two-thirds")
+        case .rightTwoThirds: return t("Deux tiers droit",  "Right two-thirds")
         case .topLeft:        return t("Coin haut-gauche",   "Top-left")
         case .topRight:       return t("Coin haut-droit",    "Top-right")
         case .bottomLeft:     return t("Coin bas-gauche",    "Bottom-left")
@@ -80,6 +85,9 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .leftThird:      return KeyCombo(keyCode: UInt32(kVK_ANSI_J),     modifiers: ctrlOpt)
         case .centerThird:    return KeyCombo(keyCode: UInt32(kVK_ANSI_K),     modifiers: ctrlOpt)
         case .rightThird:     return KeyCombo(keyCode: UInt32(kVK_ANSI_L),     modifiers: ctrlOpt)
+        // ⌃⌥⇧ + arrow — the half-arrow plus Shift, mnemonic for "wider".
+        case .leftTwoThirds:  return KeyCombo(keyCode: UInt32(kVK_LeftArrow),  modifiers: [.control, .option, .shift])
+        case .rightTwoThirds: return KeyCombo(keyCode: UInt32(kVK_RightArrow), modifiers: [.control, .option, .shift])
         case .topLeft:        return KeyCombo(keyCode: UInt32(kVK_ANSI_U),     modifiers: ctrlOpt)
         case .topRight:       return KeyCombo(keyCode: UInt32(kVK_ANSI_I),     modifiers: ctrlOpt)
         case .bottomLeft:     return KeyCombo(keyCode: UInt32(kVK_ANSI_N),     modifiers: ctrlOpt)
