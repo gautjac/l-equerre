@@ -29,9 +29,10 @@ struct FractionRect: Equatable {
 enum SnapAction: String, CaseIterable, Codable, Identifiable {
     // Halves
     case leftHalf, rightHalf, topHalf, bottomHalf
-    // Thirds (single columns) + two-thirds
+    // Thirds (single columns) + two-thirds (horizontal and vertical)
     case leftThird, centerThird, rightThird
     case leftTwoThirds, rightTwoThirds
+    case topTwoThirds, bottomTwoThirds
     // Quarters (corners)
     case topLeft, topRight, bottomLeft, bottomRight
     // Whole-screen verbs
@@ -57,6 +58,8 @@ extension SnapAction {
         case .rightThird:      return .cols(8, 4)
         case .leftTwoThirds:   return .cols(0, 8)
         case .rightTwoThirds:  return .cols(4, 8)
+        case .topTwoThirds:    return .cols(0, 12, rows: 0, 8)
+        case .bottomTwoThirds: return .cols(0, 12, rows: 4, 8)
         case .topLeft:         return .cols(0, 6, rows: 0, 6)
         case .topRight:        return .cols(6, 6, rows: 0, 6)
         case .bottomLeft:      return .cols(0, 6, rows: 6, 6)

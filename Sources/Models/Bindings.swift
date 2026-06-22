@@ -11,6 +11,7 @@ enum BindableAction: String, CaseIterable, Identifiable {
     case maximize, center, almostMaximize
     case leftThird, centerThird, rightThird
     case leftTwoThirds, rightTwoThirds
+    case topTwoThirds, bottomTwoThirds
     case topLeft, topRight, bottomLeft, bottomRight
 
     var id: String { rawValue }
@@ -30,6 +31,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .rightThird:     return .rightThird
         case .leftTwoThirds:  return .leftTwoThirds
         case .rightTwoThirds: return .rightTwoThirds
+        case .topTwoThirds:   return .topTwoThirds
+        case .bottomTwoThirds:return .bottomTwoThirds
         case .topLeft:        return .topLeft
         case .topRight:       return .topRight
         case .bottomLeft:     return .bottomLeft
@@ -51,6 +54,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .rightThird:     return t("Tiers droit",    "Right third")
         case .leftTwoThirds:  return t("Deux tiers gauche", "Left two-thirds")
         case .rightTwoThirds: return t("Deux tiers droit",  "Right two-thirds")
+        case .topTwoThirds:   return t("Deux tiers haut",   "Top two-thirds")
+        case .bottomTwoThirds:return t("Deux tiers bas",    "Bottom two-thirds")
         case .topLeft:        return t("Coin haut-gauche",   "Top-left")
         case .topRight:       return t("Coin haut-droit",    "Top-right")
         case .bottomLeft:     return t("Coin bas-gauche",    "Bottom-left")
@@ -62,7 +67,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
     /// Preferences list (the rest are shown read-only in the menu).
     var isCoreRebindable: Bool {
         switch self {
-        case .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .maximize, .center:
+        case .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .maximize, .center,
+             .leftTwoThirds, .rightTwoThirds, .topTwoThirds, .bottomTwoThirds:
             return true
         default:
             return false
@@ -85,9 +91,11 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .leftThird:      return KeyCombo(keyCode: UInt32(kVK_ANSI_J),     modifiers: ctrlOpt)
         case .centerThird:    return KeyCombo(keyCode: UInt32(kVK_ANSI_K),     modifiers: ctrlOpt)
         case .rightThird:     return KeyCombo(keyCode: UInt32(kVK_ANSI_L),     modifiers: ctrlOpt)
-        // ⌃⌥⇧ + arrow — the half-arrow plus Shift, mnemonic for "wider".
+        // ⌃⌥⇧ + arrow — the half-arrow plus Shift, mnemonic for "wider/taller".
         case .leftTwoThirds:  return KeyCombo(keyCode: UInt32(kVK_LeftArrow),  modifiers: [.control, .option, .shift])
         case .rightTwoThirds: return KeyCombo(keyCode: UInt32(kVK_RightArrow), modifiers: [.control, .option, .shift])
+        case .topTwoThirds:   return KeyCombo(keyCode: UInt32(kVK_UpArrow),    modifiers: [.control, .option, .shift])
+        case .bottomTwoThirds:return KeyCombo(keyCode: UInt32(kVK_DownArrow),  modifiers: [.control, .option, .shift])
         case .topLeft:        return KeyCombo(keyCode: UInt32(kVK_ANSI_U),     modifiers: ctrlOpt)
         case .topRight:       return KeyCombo(keyCode: UInt32(kVK_ANSI_I),     modifiers: ctrlOpt)
         case .bottomLeft:     return KeyCombo(keyCode: UInt32(kVK_ANSI_N),     modifiers: ctrlOpt)

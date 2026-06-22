@@ -46,7 +46,7 @@ System-wide hotkeys via a **hand-rolled Carbon `RegisterEventHotKey` wrapper**
 |---|---|
 | Moitié gauche / droite / haut / bas (cycles ½→⅓→⅔) | `⌃⌥←` `⌃⌥→` `⌃⌥↑` `⌃⌥↓` |
 | Tiers gauche / centre / droit | `⌃⌥J` `⌃⌥K` `⌃⌥L` |
-| Deux tiers gauche / droit | `⌃⌥⇧←` `⌃⌥⇧→` |
+| Deux tiers gauche / droit / haut / bas | `⌃⌥⇧←` `⌃⌥⇧→` `⌃⌥⇧↑` `⌃⌥⇧↓` |
 | Coins haut-gauche / haut-droit / bas-gauche / bas-droit | `⌃⌥U` `⌃⌥I` `⌃⌥N` `⌃⌥M` |
 | Plein écran (maximize) | `⌃⌥↩` |
 | Presque plein (almost maximize) | `⌃⌥A` |
@@ -64,9 +64,10 @@ app has several windows). Persisted as JSON in
 
 ### Menu-bar UI + Preferences
 A clean popover lists every grid action with its shortcut, the saved layouts
-(with a capture field), and a Preferences area to **rebind the six core hotkeys**
-(the four directions, maximize, center) with a live key-capture field, set the
-**gutter** between tiled windows (0–24 px), and toggle launch-at-login.
+(with a capture field), and a Preferences area to **rebind the core hotkeys**
+(the four directions, maximize, center, and the four two-thirds) with a live
+key-capture field, set the **gutter** between tiled windows (0–24 px), and
+toggle launch-at-login.
 
 ### Launch at login
 One switch, backed by `SMAppService.mainApp`.

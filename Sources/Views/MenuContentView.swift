@@ -51,8 +51,10 @@ struct MenuContentView: View {
                 actionRow(.rightThird,  t("Tiers droit",   "Right third"), state.bindings[.rightThird]?.display)
 
                 groupTitle(t("Deux tiers", "Two-thirds"))
-                actionRow(.leftTwoThirds,  t("Deux tiers gauche", "Left two-thirds"),  state.bindings[.leftTwoThirds]?.display)
-                actionRow(.rightTwoThirds, t("Deux tiers droit",  "Right two-thirds"), state.bindings[.rightTwoThirds]?.display)
+                actionRow(.leftTwoThirds,   t("Deux tiers gauche", "Left two-thirds"),   state.bindings[.leftTwoThirds]?.display)
+                actionRow(.rightTwoThirds,  t("Deux tiers droit",  "Right two-thirds"),  state.bindings[.rightTwoThirds]?.display)
+                actionRow(.topTwoThirds,    t("Deux tiers haut",   "Top two-thirds"),    state.bindings[.topTwoThirds]?.display)
+                actionRow(.bottomTwoThirds, t("Deux tiers bas",    "Bottom two-thirds"), state.bindings[.bottomTwoThirds]?.display)
 
                 groupTitle(t("Coins", "Corners"))
                 actionRow(.topLeft,     t("Haut-gauche",   "Top-left"),    state.bindings[.topLeft]?.display)
