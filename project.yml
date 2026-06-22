@@ -17,7 +17,13 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "1.0"
     CURRENT_PROJECT_VERSION: "1"
+    # Sign with the real Apple Development identity (not ad-hoc). A stable
+    # signature anchors the code identity across rebuilds, so the Accessibility
+    # permission the user grants PERSISTS instead of being dropped each build —
+    # ad-hoc ("Sign to Run Locally") changes the cdhash every time and TCC fails
+    # to list / keep the grant. Override the team via `xcodebuild ... DEVELOPMENT_TEAM=`.
     CODE_SIGN_STYLE: Automatic
+    DEVELOPMENT_TEAM: 9WZ66DZ69J
     GENERATE_INFOPLIST_FILE: NO
     ENABLE_USER_SCRIPT_SANDBOXING: YES
 
