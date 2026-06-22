@@ -12,13 +12,16 @@ struct MenuContentView: View {
     @State private var newLayoutName = ""
 
     var body: some View {
-        ZStack {
+        ZStack(alignment: .top) {
             Theme.paper
             BlueprintGrid()
             content
         }
-        .frame(width: 320)
-        .frame(maxHeight: 560)
+        // Pin BOTH dimensions. The trusted-state `content` is a ScrollView, which
+        // is greedy and reports no intrinsic height — with only `maxHeight` it
+        // collapses to ~0 inside a MenuBarExtra(.window), rendering the panel as
+        // an empty grid strip. A fixed height gives the ScrollView room to fill.
+        .frame(width: 320, height: 560)
     }
 
     @ViewBuilder private var content: some View {
