@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- A window manager must drive *other* applications' windows through the
+	     Accessibility (AXUIElement) API. The App Sandbox forbids cross-app
+	     control, so L'Équerre ships UNSANDBOXED — exactly like Rectangle and
+	     Lasso — and relies on the Accessibility permission the user grants by
+	     hand on first run (System Settings → Privacy & Security → Accessibility).
+	     No sandbox key is present here on purpose. -->
+</dict>
+</plist>
