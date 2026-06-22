@@ -78,11 +78,19 @@ Requires [XcodeGen](https://github.com/yonsm/XcodeGen) (`brew install xcodegen`)
 and Xcode 15+ command-line tools.
 
 ```bash
-./gen.sh        # generate LEquerre.xcodeproj from project.yml
-./run-mac.sh    # build (Debug) for native macOS, sign, and launch
+./install.sh    # build (Release), sign, install to /Applications, add to Login Items, launch
+./gen.sh        # just generate LEquerre.xcodeproj from project.yml
+./run-mac.sh    # build (Debug) and launch from /tmp, without installing
 ```
 
-`run-mac.sh` keeps DerivedData at `/tmp/l-equerre-mac-dd` — **outside iCloud** —
+**`./install.sh` is the one you want** for daily use — it produces a signed
+`/Applications/LEquerre.app`. Because `project.yml` sets `DEVELOPMENT_TEAM`, the
+build is signed with your **Apple Development** identity (a *stable* signature),
+so the Accessibility permission you grant once **persists across reinstalls**.
+Ad-hoc signing would change the code hash every build and make macOS drop the
+grant. Pass `./install.sh --reset-perms` to force a fresh permission prompt.
+
+All scripts keep DerivedData at `/tmp/l-equerre-mac-dd` — **outside iCloud** —
 because iCloud's extended attributes break `codesign`. Override with
 `LEQUERRE_MAC_DD`.
 
