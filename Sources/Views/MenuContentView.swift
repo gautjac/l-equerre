@@ -45,6 +45,9 @@ struct MenuContentView: View {
                 actionRow(.cycleUp,    t("Haut",    "Top"),   state.bindings[.cycleUp]?.display)
                 actionRow(.cycleDown,  t("Bas",     "Bottom"),state.bindings[.cycleDown]?.display)
 
+                groupTitle(t("Deux fenêtres", "Two windows"))
+                actionRow(.sideBySide, t("Côte à côte", "Side by side"), state.bindings[.sideBySide]?.display)
+
                 groupTitle(t("Tiers", "Thirds"))
                 actionRow(.leftThird,   t("Tiers gauche",  "Left third"),  state.bindings[.leftThird]?.display)
                 actionRow(.centerThird, t("Tiers centre",  "Center third"),state.bindings[.centerThird]?.display)

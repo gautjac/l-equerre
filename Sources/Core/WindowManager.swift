@@ -26,6 +26,10 @@ final class WindowManager: ObservableObject {
     /// status the UI can flash, or nil on success-with-no-message.
     @discardableResult
     func perform(_ action: SnapAction) -> String? {
+        // The two-window verb has its own flow (it touches two windows, not the
+        // single focused window every other action operates on).
+        if action == .sideBySide { return sideBySide() }
+
         guard AccessibilityBridge.isTrusted else {
             return t("Permission d'accessibilité requise", "Accessibility permission required")
         }
@@ -58,6 +62,69 @@ final class WindowManager: ObservableObject {
         // AppKit (bottom-left) → Quartz (top-left) for the AX write.
         let targetQuartz = ScreenInfo.flip(targetAppKit)
         AccessibilityBridge.setFrame(targetQuartz, of: window)
+        return nil
+    }
+
+    // MARK: Side-by-side (one-shot two-window tiling)
+
+    /// Tile the two front-most windows side by side on the active screen in a
+    /// single action — the focused window on the **left** half, the next window
+    /// behind it on the **right** — so the user never has to focus each window
+    /// and snap it by hand.
+    ///
+    /// This is the direct fix for "I pressed Right then Left and they still
+    /// overlapped": L'Équerre is focus-based, so both presses landed on the same
+    /// focused window (one app moved, the other never did). `sideBySide` instead
+    /// places *two distinct* windows at once.
+    @discardableResult
+    func sideBySide() -> String? {
+        guard AccessibilityBridge.isTrusted else {
+            return t("Permission d'accessibilité requise", "Accessibility permission required")
+        }
+        guard let (front, _) = AccessibilityBridge.focusedWindow(),
+              AccessibilityBridge.isResizable(front),
+              let frontQuartz = AccessibilityBridge.frame(of: front) else {
+            return t("Aucune fenêtre active", "No focused window")
+        }
+
+        let frontScreen = ScreenInfo.screen(forQuartzFrame: frontQuartz)
+        let visibleAppKit = frontScreen.visibleFrame
+
+        // The next distinct, resizable window in z-order on the same screen.
+        let other = AccessibilityBridge.zOrderedWindows().first { entry in
+            !CFEqual(entry.window, front)
+                && AccessibilityBridge.isResizable(entry.window)
+                && ScreenInfo.screen(forQuartzFrame: entry.frame) === frontScreen
+        }
+
+        let leftQuartz = ScreenInfo.flip(GridGeometry.frame(for: .cols(0, 6), in: visibleAppKit, gap: gap))
+
+        guard let other else {
+            // Only one window in play: place it left so the action still does
+            // something predictable, and say why nothing paired with it.
+            AccessibilityBridge.setFrame(leftQuartz, of: front)
+            return t("Une seule fenêtre — placée à gauche", "Only one window — placed left")
+        }
+
+        let rightQuartz = ScreenInfo.flip(GridGeometry.frame(for: .cols(6, 6), in: visibleAppKit, gap: gap))
+
+        // Place the background window first, then the focused one, so the window
+        // the user is looking at settles last and stays key.
+        AccessibilityBridge.setFrame(rightQuartz, of: other.window)
+        AccessibilityBridge.setFrame(leftQuartz, of: front)
+
+        // If a minimum-width app (Chromium/Electron — e.g. Comet, Claude Desktop)
+        // couldn't shrink to its half and now bleeds past the seam, pin it flush
+        // to the screen's right edge so it overlaps as little as possible. We
+        // can't force an app below its own minimum width.
+        if let got = AccessibilityBridge.frame(of: other.window) {
+            let gotAppKit = ScreenInfo.flip(got)
+            if gotAppKit.maxX > visibleAppKit.maxX + 1 {
+                var pinned = gotAppKit
+                pinned.origin.x = visibleAppKit.maxX - gotAppKit.width
+                AccessibilityBridge.setFrame(ScreenInfo.flip(pinned), of: other.window)
+            }
+        }
         return nil
     }
 
@@ -126,8 +193,16 @@ final class WindowManager: ObservableObject {
     /// Re-apply a saved layout to the currently active screen. Best-effort:
     /// matches each slot to a running app's window by bundle id (and title when
     /// an app has several windows).
-    func applyLayout(_ layout: NamedLayout) {
-        guard AccessibilityBridge.isTrusted else { return }
+    ///
+    /// Returns `(placed, total)` — how many of the layout's slots found a live
+    /// window to land on this pass, out of the total. Callers use this to retry:
+    /// when a sibling app (La Régie) has *just* launched the apps, their windows
+    /// may not exist yet, so re-running until `placed == total` (or a timeout)
+    /// catches them as they appear. Re-placing an already-placed window is
+    /// idempotent, so retries are harmless.
+    @discardableResult
+    func applyLayout(_ layout: NamedLayout) -> (placed: Int, total: Int) {
+        guard AccessibilityBridge.isTrusted else { return (0, layout.slots.count) }
 
         let referenceVisible: CGRect = {
             if let (w, _) = AccessibilityBridge.focusedWindow(),
@@ -146,6 +221,7 @@ final class WindowManager: ObservableObject {
                 AccessibilityBridge.windows(ofPID: app.processIdentifier))
         }
 
+        var placed = 0
         for slot in layout.slots {
             guard var candidates = byBundle[slot.bundleID], !candidates.isEmpty else { continue }
             // Prefer an exact title match; else take the first remaining window.
@@ -161,7 +237,9 @@ final class WindowManager: ObservableObject {
 
             let targetAppKit = GridGeometry.frame(for: slot.fraction, in: referenceVisible, gap: gap)
             AccessibilityBridge.setFrame(ScreenInfo.flip(targetAppKit), of: window)
+            placed += 1
         }
+        return (placed, layout.slots.count)
     }
 
     /// Express an AppKit-space frame as a fraction of a visible frame, clamped

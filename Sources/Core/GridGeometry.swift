@@ -39,6 +39,8 @@ enum SnapAction: String, CaseIterable, Codable, Identifiable {
     case maximize, almostMaximize, center
     // The chainable directional verbs (cycle through related sizes)
     case cycleLeft, cycleRight, cycleUp, cycleDown
+    // One-shot two-window verb: tile the two front-most windows side by side.
+    case sideBySide
 
     var id: String { rawValue }
 }
@@ -66,7 +68,9 @@ extension SnapAction {
         case .bottomRight:     return .cols(6, 6, rows: 6, 6)
         case .maximize:        return FractionRect(0, 0, 1, 1)
         case .almostMaximize:  return FractionRect(0.04, 0.04, 0.92, 0.92)
-        case .center, .cycleLeft, .cycleRight, .cycleUp, .cycleDown:
+        case .center, .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .sideBySide:
+            // No single fraction: `center` preserves size, the cycle verbs walk
+            // a ring, and `sideBySide` acts on two windows at once.
             return nil
         }
     }

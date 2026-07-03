@@ -49,6 +49,13 @@ targets:
         # Menubar agent: no Dock icon, no main window on launch.
         LSUIElement: true
         ITSAppUsesNonExemptEncryption: false
+        # Remote control: sibling Atelier apps (La Régie) fire
+        # x-equerre://apply?name=<disposition> to re-apply a saved layout.
+        CFBundleURLTypes:
+          - CFBundleURLName: app.atelier.lequerre.url
+            CFBundleTypeRole: Viewer
+            CFBundleURLSchemes:
+              - x-equerre
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: app.atelier.lequerre

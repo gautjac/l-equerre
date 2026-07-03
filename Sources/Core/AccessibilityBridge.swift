@@ -132,6 +132,60 @@ enum AccessibilityBridge {
 
     // MARK: Enumerate (for layout capture / apply)
 
+    /// On-screen, normal-layer windows in front-to-back z-order, each resolved
+    /// to an `AXUIElement` by matching its Quartz frame within the owning app.
+    /// Skips our own process, the menu bar / Dock / overlays (layer ≠ 0), tiny
+    /// utility windows, and anything we can't resolve. This is how one-shot
+    /// side-by-side finds "the other" window without the user focusing it.
+    ///
+    /// Frame matching needs **no** Screen Recording permission — we read only
+    /// window geometry and owner PID, which `CGWindowList` always provides; we
+    /// never touch window titles or pixels.
+    static func zOrderedWindows() -> [(window: AXUIElement, pid: pid_t, frame: CGRect)] {
+        let options: CGWindowListOption = [.optionOnScreenOnly, .excludeDesktopElements]
+        guard let raw = CGWindowListCopyWindowInfo(options, kCGNullWindowID) as? [[String: Any]] else { return [] }
+        let myPID = ProcessInfo.processInfo.processIdentifier
+
+        var resolved: [(AXUIElement, pid_t, CGRect)] = []
+        var axCache: [pid_t: [(AXUIElement, CGRect)]] = [:]   // per-app AX windows + frames
+        var claimed: [pid_t: Set<Int>] = [:]                  // AX indices already matched
+
+        for info in raw {
+            guard let layer = info[kCGWindowLayer as String] as? Int, layer == 0,
+                  let pid = info[kCGWindowOwnerPID as String] as? pid_t, pid != myPID,
+                  let boundsDict = info[kCGWindowBounds as String] as? NSDictionary,
+                  let bounds = CGRect(dictionaryRepresentation: boundsDict as CFDictionary) else { continue }
+
+            // Ignore palettes, status popovers and sheets — not tiling targets.
+            guard bounds.width >= 200, bounds.height >= 120 else { continue }
+
+            let axWindows = axCache[pid] ?? windows(ofPID: pid).compactMap { (w, _) -> (AXUIElement, CGRect)? in
+                guard let f = frame(of: w) else { return nil }
+                return (w, f)
+            }
+            axCache[pid] = axWindows
+
+            // Match this CG window to its closest unclaimed AX element by frame.
+            var bestIdx = -1
+            var bestDist = CGFloat.greatestFiniteMagnitude
+            for (i, entry) in axWindows.enumerated() where !(claimed[pid]?.contains(i) ?? false) {
+                let d = rectDistance(entry.1, bounds)
+                if d < bestDist { bestDist = d; bestIdx = i }
+            }
+            guard bestIdx >= 0, bestDist < 40 else { continue }
+            claimed[pid, default: []].insert(bestIdx)
+            resolved.append((axWindows[bestIdx].0, pid, axWindows[bestIdx].1))
+        }
+        return resolved
+    }
+
+    /// L1 distance between two rects (origin + size), for matching a CGWindow's
+    /// bounds to an AX window's frame. Both are in the same Quartz top-left space.
+    private static func rectDistance(_ a: CGRect, _ b: CGRect) -> CGFloat {
+        abs(a.minX - b.minX) + abs(a.minY - b.minY)
+            + abs(a.width - b.width) + abs(a.height - b.height)
+    }
+
     /// All standard, titled windows of one running app, as (element, title)
     /// pairs in front-to-back order.
     static func windows(ofPID pid: pid_t) -> [(AXUIElement, String)] {

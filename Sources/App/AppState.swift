@@ -29,11 +29,48 @@ final class AppState: ObservableObject {
     private var trustTimer: Timer?
     private let bindingsKey = "lequerre.bindings.v1"
 
+    // MARK: Bridge (x-equerre:// remote control)
+
+    /// The live instance, so the AppDelegate's URL handler can reach it. Weak —
+    /// the App owns it as a `@StateObject`; we just borrow a reference.
+    static weak var shared: AppState?
+
+    /// URLs that arrived before this instance existed (a cold launch *via* the
+    /// URL itself), replayed once we're ready.
+    private static var pendingURLs: [URL] = []
+
+    /// Entry point for the AppDelegate: route a `x-equerre://` URL to the live
+    /// state, or stash it if we're mid-launch.
+    static func receive(url: URL) {
+        if let live = shared { live.handle(openURL: url) }
+        else { pendingURLs.append(url) }
+    }
+
+    // Retry state for `applyLayout(named:)` — see `runRetryPass`.
+    private var layoutRetryTimer: Timer?
+    private var retryLayout: NamedLayout?
+    private var retrySchedule: [TimeInterval] = []
+
     init() {
         loadBindings()
         registerAllHotkeys()
         refreshLaunchAtLogin()
         startTrustPolling()
+
+        // Become reachable from the URL handler, then drain anything that
+        // arrived during a URL-triggered cold launch.
+        AppState.shared = self
+        let pending = AppState.pendingURLs
+        AppState.pendingURLs = []
+        pending.forEach { handle(openURL: $0) }
+    }
+
+    /// Decode an incoming `x-equerre://` URL and act on it.
+    func handle(openURL url: URL) {
+        switch BridgeURL.parse(url) {
+        case .apply(let name): applyLayout(named: name)
+        case .none:            break
+        }
     }
 
     // MARK: Bindings persistence
@@ -113,6 +150,52 @@ final class AppState: ObservableObject {
     func applyLayout(_ layout: NamedLayout) {
         manager.applyLayout(layout)
         flash(t("Disposition « \(layout.name) » appliquée", "Layout “\(layout.name)” applied"))
+    }
+
+    /// Apply a disposition looked up by name — the verb behind
+    /// `x-equerre://apply?name=…`. Matching is case-insensitive and
+    /// whitespace-trimmed. Because the caller (e.g. La Régie) may have launched
+    /// the apps a heartbeat ago, this **retries**: it re-applies on a short
+    /// schedule until every slot finds its window, or ~2.6 s elapse — so windows
+    /// snap into place as they appear, with no fragile fixed delay on the caller.
+    func applyLayout(named name: String) {
+        let key = name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !key.isEmpty else { return }
+        guard let layout = LayoutStore.shared.layouts.first(where: {
+            $0.name.lowercased() == key
+        }) else {
+            flash(t("Disposition « \(name) » introuvable", "Layout “\(name)” not found"))
+            return
+        }
+        guard AccessibilityBridge.isTrusted else {
+            flash(t("Permission d'accessibilité requise", "Accessibility permission required"))
+            return
+        }
+
+        layoutRetryTimer?.invalidate()
+        retryLayout = layout
+        retrySchedule = [0.3, 0.6, 1.0, 1.6, 2.6]   // delays BETWEEN passes (s)
+        runRetryPass()
+    }
+
+    /// One pass of `applyLayout(named:)`: place what we can, and if some slots
+    /// still have no window, schedule another pass — unless the schedule is
+    /// exhausted or every slot is now home.
+    private func runRetryPass() {
+        guard let layout = retryLayout else { return }
+        let (placed, total) = manager.applyLayout(layout)
+
+        if placed >= total || retrySchedule.isEmpty {
+            flash(t("Disposition « \(layout.name) » appliquée", "Layout “\(layout.name)” applied"))
+            retryLayout = nil
+            retrySchedule = []
+            return
+        }
+
+        let delay = retrySchedule.removeFirst()
+        layoutRetryTimer = Timer.scheduledTimer(withTimeInterval: delay, repeats: false) { [weak self] _ in
+            Task { @MainActor in self?.runRetryPass() }
+        }
     }
 
     func deleteLayout(_ layout: NamedLayout) {

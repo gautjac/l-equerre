@@ -72,6 +72,28 @@ toggle launch-at-login.
 ### Launch at login
 One switch, backed by `SMAppService.mainApp`.
 
+### Remote control (`x-equerre://`)
+L'Équerre registers a URL scheme so sibling Atelier apps can drive it without
+re-implementing window control. One verb today:
+
+```
+x-equerre://apply?name=<disposition>
+```
+
+re-applies the saved disposition of that name (case-insensitive). This is how
+**La Régie** (the cue console) completes a setup: its décor *launches* the apps,
+then fires this URL so L'Équerre *places* their windows. Because freshly-launched
+windows may not exist the instant the URL arrives, `apply` **retries** placement
+on a short schedule (~2.6 s), snapping each window the moment it appears — so the
+caller needs no fragile fixed delay. Try it from a shell:
+
+```sh
+open "x-equerre://apply?name=Montage"
+```
+
+The contract is parsed in [`BridgeURL`](Sources/Core/BridgeURL.swift) and covered
+by `BridgeURLTests`.
+
 ---
 
 ## Build & run

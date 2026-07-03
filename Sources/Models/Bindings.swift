@@ -8,6 +8,7 @@ import AppKit
 /// persistence and for `HotkeyManager` registration.
 enum BindableAction: String, CaseIterable, Identifiable {
     case cycleLeft, cycleRight, cycleUp, cycleDown
+    case sideBySide
     case maximize, center, almostMaximize
     case leftThird, centerThird, rightThird
     case leftTwoThirds, rightTwoThirds
@@ -23,6 +24,7 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .cycleRight:     return .cycleRight
         case .cycleUp:        return .cycleUp
         case .cycleDown:      return .cycleDown
+        case .sideBySide:     return .sideBySide
         case .maximize:       return .maximize
         case .center:         return .center
         case .almostMaximize: return .almostMaximize
@@ -46,6 +48,7 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .cycleRight:     return t("Moitié droite",  "Right half")
         case .cycleUp:        return t("Moitié haut",    "Top half")
         case .cycleDown:      return t("Moitié bas",     "Bottom half")
+        case .sideBySide:     return t("Côte à côte",    "Side by side")
         case .maximize:       return t("Plein écran",    "Maximize")
         case .center:         return t("Centrer",        "Center")
         case .almostMaximize: return t("Presque plein",  "Almost maximize")
@@ -67,7 +70,7 @@ enum BindableAction: String, CaseIterable, Identifiable {
     /// Preferences list (the rest are shown read-only in the menu).
     var isCoreRebindable: Bool {
         switch self {
-        case .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .maximize, .center,
+        case .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .sideBySide, .maximize, .center,
              .leftTwoThirds, .rightTwoThirds, .topTwoThirds, .bottomTwoThirds:
             return true
         default:
@@ -85,6 +88,8 @@ enum BindableAction: String, CaseIterable, Identifiable {
         case .cycleRight:     return KeyCombo(keyCode: UInt32(kVK_RightArrow), modifiers: ctrlOpt)
         case .cycleUp:        return KeyCombo(keyCode: UInt32(kVK_UpArrow),    modifiers: ctrlOpt)
         case .cycleDown:      return KeyCombo(keyCode: UInt32(kVK_DownArrow),  modifiers: ctrlOpt)
+        // ⌃⌥S — S for "side by side" / "split".
+        case .sideBySide:     return KeyCombo(keyCode: UInt32(kVK_ANSI_S),     modifiers: ctrlOpt)
         case .maximize:       return KeyCombo(keyCode: UInt32(kVK_Return),     modifiers: ctrlOpt)
         case .center:         return KeyCombo(keyCode: UInt32(kVK_ANSI_C),     modifiers: ctrlOpt)
         case .almostMaximize: return KeyCombo(keyCode: UInt32(kVK_ANSI_A),     modifiers: ctrlOpt)

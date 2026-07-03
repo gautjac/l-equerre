@@ -23,16 +23,36 @@ struct SnapGlyph: View {
             RoundedRectangle(cornerRadius: 3)
                 .stroke(Theme.gridLineBold, lineWidth: 1)
                 .background(RoundedRectangle(cornerRadius: 3).fill(Theme.paperSunken))
-            GeometryReader { geo in
-                let f = fraction
-                RoundedRectangle(cornerRadius: 1.5)
-                    .fill(Theme.accent.opacity(0.92))
-                    .frame(width: max(3, geo.size.width * f.w - 2),
-                           height: max(3, geo.size.height * f.h - 2))
-                    .position(x: geo.size.width * (f.x + f.w / 2),
-                              y: geo.size.height * (f.y + f.h / 2))
+            if action == .sideBySide {
+                // Two panes — bright (focused, left) + dim (other, right) — read
+                // instantly as "two windows tiled together".
+                GeometryReader { geo in
+                    let inner: CGFloat = 2
+                    let seam: CGFloat = 2
+                    let paneW = (geo.size.width - inner * 2 - seam) / 2
+                    let paneH = geo.size.height - inner * 2
+                    HStack(spacing: seam) {
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(Theme.accent.opacity(0.92))
+                            .frame(width: paneW, height: paneH)
+                        RoundedRectangle(cornerRadius: 1.5)
+                            .fill(Theme.accent.opacity(0.5))
+                            .frame(width: paneW, height: paneH)
+                    }
+                    .padding(inner)
+                }
+            } else {
+                GeometryReader { geo in
+                    let f = fraction
+                    RoundedRectangle(cornerRadius: 1.5)
+                        .fill(Theme.accent.opacity(0.92))
+                        .frame(width: max(3, geo.size.width * f.w - 2),
+                               height: max(3, geo.size.height * f.h - 2))
+                        .position(x: geo.size.width * (f.x + f.w / 2),
+                                  y: geo.size.height * (f.y + f.h / 2))
+                }
+                .padding(2)
             }
-            .padding(2)
         }
         .frame(width: w, height: h)
     }

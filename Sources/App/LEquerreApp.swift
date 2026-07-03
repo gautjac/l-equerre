@@ -25,7 +25,8 @@ struct LEquerreApp: App {
 }
 
 /// Minimal delegate: keeps the app alive as an accessory (no Dock icon) and
-/// nudges the Accessibility prompt on first launch if not yet trusted.
+/// nudges the Accessibility prompt on first launch if not yet trusted, and
+/// receives `x-equerre://` URLs that drive L'Équerre from sibling apps.
 final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -33,5 +34,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Surface the system prompt once; the onboarding screen explains it.
             AccessibilityBridge.requestTrust()
         }
+    }
+
+    /// Custom-scheme entry point (registered via `CFBundleURLTypes`). La Régie
+    /// and friends fire e.g. `x-equerre://apply?name=Montage`; we forward to the
+    /// live `AppState`, which buffers the URL if launch is still in flight.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls { AppState.receive(url: url) }
     }
 }

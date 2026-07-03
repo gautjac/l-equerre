@@ -120,4 +120,23 @@ final class GridGeometryTests: XCTestCase {
         XCTAssertNotNil(Cycles.ring(for: .cycleLeft))
         XCTAssertNil(Cycles.ring(for: .maximize))
     }
+
+    // MARK: Side-by-side
+
+    func testSideBySideIsSpecial() {
+        // It's a two-window verb: no single fraction, no cycle ring.
+        XCTAssertNil(SnapAction.sideBySide.fraction)
+        XCTAssertNil(Cycles.ring(for: .sideBySide))
+    }
+
+    func testSideBySideHalvesTileWithoutOverlap() {
+        // The two halves side-by-side uses are exactly complementary: they meet
+        // at the seam, never overlap, and together fill the visible width.
+        let left  = GridGeometry.frame(for: .cols(0, 6), in: visible)
+        let right = GridGeometry.frame(for: .cols(6, 6), in: visible)
+        XCTAssertEqual(left.maxX, right.minX, accuracy: 0.5)
+        XCTAssertEqual(left.width + right.width, visible.width, accuracy: 1)
+        // Nudge both inward by 1px and they still must not intersect.
+        XCTAssertFalse(left.insetBy(dx: 1, dy: 0).intersects(right.insetBy(dx: 1, dy: 0)))
+    }
 }

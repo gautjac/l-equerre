@@ -36,6 +36,15 @@ final class BindingsAndLayoutTests: XCTestCase {
         XCTAssertEqual(set.count, combos.count, "Default hotkeys must not collide")
     }
 
+    func testSideBySideBindingMapsAndHasDefault() {
+        XCTAssertEqual(BindableAction.sideBySide.snap, .sideBySide)
+        let combo = BindableAction.sideBySide.defaultCombo
+        XCTAssertTrue(combo.modifiers.contains(.control))
+        XCTAssertTrue(combo.modifiers.contains(.option))
+        XCTAssertEqual(combo.keyCode, UInt32(kVK_ANSI_S))
+        XCTAssertTrue(BindableAction.sideBySide.isCoreRebindable)
+    }
+
     func testKeyComboCodableRoundTrip() throws {
         let combo = BindableAction.maximize.defaultCombo
         let data = try JSONEncoder().encode(combo)
@@ -69,7 +78,7 @@ final class BindingsAndLayoutTests: XCTestCase {
     // MARK: Snap action coverage
 
     func testEverySnapActionEitherHasFractionOrIsSpecial() {
-        let special: Set<SnapAction> = [.center, .cycleLeft, .cycleRight, .cycleUp, .cycleDown]
+        let special: Set<SnapAction> = [.center, .cycleLeft, .cycleRight, .cycleUp, .cycleDown, .sideBySide]
         for action in SnapAction.allCases {
             if special.contains(action) {
                 XCTAssertNil(action.fraction)
