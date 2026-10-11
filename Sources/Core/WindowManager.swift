@@ -25,7 +25,7 @@ final class WindowManager: ObservableObject {
     /// Perform a snap action on the currently focused window. Returns a short
     /// status the UI can flash, or nil on success-with-no-message.
     @discardableResult
-    func perform(_ action: SnapAction) -> String? {
+    func perform(_ action: SnapAction, in target: NSRunningApplication? = nil) -> String? {
         // The two-window verb has its own flow (it touches two windows, not the
         // single focused window every other action operates on).
         if action == .sideBySide { return sideBySide() }
@@ -33,7 +33,7 @@ final class WindowManager: ObservableObject {
         guard AccessibilityBridge.isTrusted else {
             return t("Permission d'accessibilité requise", "Accessibility permission required")
         }
-        guard let (window, app) = AccessibilityBridge.focusedWindow() else {
+        guard let (window, app) = AccessibilityBridge.focusedWindow(of: target) else {
             return t("Aucune fenêtre active", "No focused window")
         }
         guard AccessibilityBridge.isResizable(window),

@@ -62,4 +62,40 @@ final class BridgeURLTests: XCTestCase {
         XCTAssertNil(parse("x-equerre://apply?name="))
         XCTAssertNil(parse("x-equerre://apply?name=%20%20"))
     }
+
+    // MARK: snap (Le Verbe's three choices, and the rest)
+
+    func testSnapShortNames() {
+        XCTAssertEqual(parse("x-equerre://snap?zone=left"), .snap(zone: .leftHalf, app: nil))
+        XCTAssertEqual(parse("x-equerre://snap?zone=right&app=com.apple.Safari"), .snap(zone: .rightHalf, app: "com.apple.Safari"))
+        XCTAssertEqual(parse("x-equerre://snap?zone=almost"), .snap(zone: .almostMaximize, app: nil))
+        XCTAssertEqual(parse("x-equerre://snap?zone=Full"), .snap(zone: .maximize, app: nil), "case never matters")
+        XCTAssertEqual(parse("X-EQUERRE://SNAP?ZONE=gauche"), .snap(zone: .leftHalf, app: nil))
+    }
+
+    func testSnapAcceptsAnyFixedZoneByItsName() {
+        XCTAssertEqual(parse("x-equerre://snap?zone=topLeft"), .snap(zone: .topLeft, app: nil))
+        XCTAssertEqual(parse("x-equerre://snap?zone=leftTwoThirds"), .snap(zone: .leftTwoThirds, app: nil))
+        XCTAssertEqual(parse("x-equerre://snap?zone=center"), .snap(zone: .center, app: nil))
+    }
+
+    func testSnapRefusesWhatIsNotAZone() {
+        XCTAssertNil(parse("x-equerre://snap"), "no zone")
+        XCTAssertNil(parse("x-equerre://snap?zone="))
+        XCTAssertNil(parse("x-equerre://snap?zone=banana"))
+        for verb in ["cycleLeft", "cycleRight", "cycleUp", "cycleDown", "sideBySide"] {
+            XCTAssertNil(parse("x-equerre://snap?zone=\(verb)"), "\(verb) needs key presses or two windows, not a URL")
+        }
+    }
+
+    func testSnapAppIsOptionalAndTrimmed() {
+        XCTAssertEqual(parse("x-equerre://snap?zone=left&app="), .snap(zone: .leftHalf, app: nil))
+        XCTAssertEqual(parse("x-equerre://snap?zone=left&app=%20com.apple.Notes%20"), .snap(zone: .leftHalf, app: "com.apple.Notes"))
+    }
+
+    func testTheThreeZonesAreWhatTheirNamesSay() {
+        XCTAssertEqual(SnapAction.leftHalf.fraction, FractionRect(0, 0, 0.5, 1))
+        XCTAssertEqual(SnapAction.rightHalf.fraction, FractionRect(0.5, 0, 0.5, 1))
+        XCTAssertEqual(SnapAction.almostMaximize.fraction, FractionRect(0.04, 0.04, 0.92, 0.92))
+    }
 }

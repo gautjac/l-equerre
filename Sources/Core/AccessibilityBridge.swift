@@ -32,9 +32,10 @@ enum AccessibilityBridge {
     /// The AXUIElement for the focused window of the frontmost application,
     /// plus that app's running-application handle. Returns nil when nothing
     /// suitable is focused or permission is missing.
-    static func focusedWindow() -> (window: AXUIElement, app: NSRunningApplication)? {
+    /// `app`: look in that app instead of the frontmost one (a caller names its target when focus may not have moved yet).
+    static func focusedWindow(of app: NSRunningApplication? = nil) -> (window: AXUIElement, app: NSRunningApplication)? {
         guard isTrusted,
-              let frontApp = NSWorkspace.shared.frontmostApplication,
+              let frontApp = app ?? NSWorkspace.shared.frontmostApplication,
               frontApp.processIdentifier > 0 else { return nil }
 
         let appElement = AXUIElementCreateApplication(frontApp.processIdentifier)

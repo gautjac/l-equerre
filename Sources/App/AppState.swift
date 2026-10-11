@@ -69,6 +69,11 @@ final class AppState: ObservableObject {
     func handle(openURL url: URL) {
         switch BridgeURL.parse(url) {
         case .apply(let name): applyLayout(named: name)
+        case .snap(let zone, let bundleID):
+            // A named app that isn't running is ignored (we would snap whatever happens to be in front: surprising).
+            let target = bundleID.flatMap { id in NSWorkspace.shared.runningApplications.first { $0.bundleIdentifier == id } }
+            if bundleID != nil, target == nil { break }
+            _ = manager.perform(zone, in: target)
         case .none:            break
         }
     }

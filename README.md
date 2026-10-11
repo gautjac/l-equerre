@@ -80,7 +80,13 @@ re-implementing window control. One verb today:
 x-equerre://apply?name=<disposition>
 ```
 
-re-applies the saved disposition of that name (case-insensitive). This is how
+re-applies the saved disposition of that name (case-insensitive).
+
+```
+x-equerre://snap?zone=left|right|almost|top|bottom|max|center|<any fixed zone, e.g. topLeft>[&app=<bundle id>]
+```
+
+puts ONE window in a zone. `app` names the target app (Le Verbe uses it: it has just closed its own panel, so "the focused window" may not be the right one yet); omitted, it is the frontmost app's focused window. An `app` that isn't running is ignored. The cycling verbs and `sideBySide` are not zones and are refused. This is how
 **La Régie** (the cue console) completes a setup: its décor *launches* the apps,
 then fires this URL so L'Équerre *places* their windows. Because freshly-launched
 windows may not exist the instant the URL arrives, `apply` **retries** placement
